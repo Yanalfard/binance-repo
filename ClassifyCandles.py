@@ -1,4 +1,3 @@
-import sklearn
 import BinanceRepo
 import plotly
 import plotly.graph_objects as go

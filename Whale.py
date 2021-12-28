@@ -1,5 +1,6 @@
 import datetime
 
+
 class Whale(object):
     From = str()
     To = str()

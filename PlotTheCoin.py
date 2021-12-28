@@ -2,7 +2,6 @@ from operator import truediv
 import BinanceRepo
 import re
 from pandas.core.frame import DataFrame
-import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from binance.client import Client
 import pandas as pd
@@ -12,6 +11,8 @@ from shapely.geometry import LineString
 from Colors import bcolors
 import time
 import winsound
+import plotly.graph_objects as go
+
 
 client = Client('b8ZKmvQQw08XSm5LShuC2aEmLsuqxTDYsFrVqLpaeFJ13WjkjVshuW5HkW0FZSZQ',
                 'VtrYrBVto7UfO7ZtlgEyucrNnndOSRDCrmtYrYvC4WZO6Xnv24HM5kWKp4SpowsM')
@@ -124,7 +125,7 @@ while True:
                 asset = asset.replace('USDT', '')
                 candles = BinanceRepo.getCandles(asset, 10)
 
-                # fibSays(asset)
+                fibSays(asset)
                 macdSays(candles)
                 rsiSays(candles)
                 rsiDivergenceSays(candles)
@@ -137,8 +138,8 @@ while True:
 #                                      open=candels['open'], high=candels['high'],
 #                                      low=candels['low'], close=candels['close'])])
 # fig.show()
-
-
+#
+#
 # macdLine = go.Scatter(
 #     x=macdIndicator['date'],
 #     y=macdIndicator['macd'],
@@ -147,12 +148,12 @@ while True:
 #         color='rgb(5, 149, 0)'
 #     )
 # )
-
+#
 # SignalLine = go.Scatter(
 #     x=macdIndicator['date'],
 #     y=macdIndicator['signal'],
 #     name='Signal'
 # )
-
+#
 # data = go.Data([macdLine, SignalLine])
 # plotly.offline.iplot(data, filename='basic-line')

@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 from enum import Enum
 from shapely.geometry import LineString
+from datetime import timedelta
 
 client = Client('b8ZKmvQQw08XSm5LShuC2aEmLsuqxTDYsFrVqLpaeFJ13WjkjVshuW5HkW0FZSZQ',
                 'VtrYrBVto7UfO7ZtlgEyucrNnndOSRDCrmtYrYvC4WZO6Xnv24HM5kWKp4SpowsM')
@@ -109,6 +110,56 @@ def getCandlesDaily(symbol=str(), timeFrame=int()):
     return pd.DataFrame.from_dict(klines)
 
 
+def getCandles5Mins(symbol=str(), timeFrame=int()):
+    # input: dataframe {     str(), int()     }
+    # output: dataframe {     date:list(), open:list(), hign:list(), low:list(), close:list()     }
+
+    candles = list(client.get_historical_klines_generator(
+        f"{symbol.upper()}USDT", Client.KLINE_INTERVAL_5MINUTE, f"{timeFrame} day ago UTC"))
+    dates = []
+    open_data = []
+    high_data = []
+    low_data = []
+    close_data = []
+    volume = []
+    for candle in candles:
+        dates.append(datetime.fromtimestamp(int(candle[0]) / 1000))
+        open_data.append(float(candle[1]))
+        high_data.append(float(candle[2]))
+        low_data.append(float(candle[3]))
+        close_data.append(float(candle[4]))
+        volume.append(float(candle[5]))
+
+    klines = {'date': dates, 'open': open_data,
+              'high': high_data, 'low': low_data, 'close': close_data, 'volume': volume}
+    return pd.DataFrame.from_dict(klines)
+
+
+def getCandles60Mins(symbol=str(), timeFrame=int()):
+    # input: dataframe {     str(), int()     }
+    # output: dataframe {     date:list(), open:list(), hign:list(), low:list(), close:list()     }
+
+    candles = list(client.get_historical_klines_generator(
+        f"{symbol.upper()}USDT", Client.KLINE_INTERVAL_1HOUR, f"{timeFrame} day ago UTC"))
+    dates = []
+    open_data = []
+    high_data = []
+    low_data = []
+    close_data = []
+    volume = []
+    for candle in candles:
+        dates.append(datetime.fromtimestamp(int(candle[0]) / 1000))
+        open_data.append(float(candle[1]))
+        high_data.append(float(candle[2]))
+        low_data.append(float(candle[3]))
+        close_data.append(float(candle[4]))
+        volume.append(float(candle[5]))
+
+    klines = {'date': dates, 'open': open_data,
+              'high': high_data, 'low': low_data, 'close': close_data, 'volume': volume}
+    return pd.DataFrame.from_dict(klines)
+
+
 def indicateMacd(df=DataFrame()):
     # input: dataframe {     date:list(), open:list(), hign:list(), low:list(), close:list()     }
     # output: dataframe {     date:list(), macd:list(), signal:list()     }
@@ -137,7 +188,7 @@ def calcRsi(series=list()):
     d[d.index[13]] = np.mean(d[:14])
     d = d.drop(d.index[:(13)])
     rs = pd.DataFrame.ewm(u, com=13, adjust=False).mean() / \
-        pd.DataFrame.ewm(d, com=13, adjust=False).mean()
+         pd.DataFrame.ewm(d, com=13, adjust=False).mean()
     return 100 - 100 / (1 + rs)
 
 
@@ -147,7 +198,7 @@ def isOrderedInLastHour(symbol=str):
 
     trades = client.get_my_trades(symbol=f'{symbol.upper()}USDT')
     for i in trades:
-        if(round(int(i['time']) / 1000) > (round(datetime.now().timestamp()) - 4200)):
+        if (round(int(i['time']) / 1000) > (round(datetime.now().timestamp()) - 4200)):
             return True
     return False
 
@@ -229,7 +280,7 @@ def isMacdOK(candels=DataFrame):
     if macdLine.intersects(signalLine) == True:
         macdSlope = slope(mx1, mx2, my1, my2)
         signalSlop = slope(sx1, sx2, sy1, sy2)
-        if(macdSlope > signalSlop and my2 > sy2):
+        if (macdSlope > signalSlop and my2 > sy2):
             return 100
         else:
             return -100
@@ -258,7 +309,7 @@ def __sliceCandels(candels=DataFrame, fromm=int(0), till=int(1000000000)):
 
     result = {'date': dates, 'open': opens, 'high': highs,
               'low': lows, 'close': closes, 'index': indexes}
-    final =  pd.DataFrame.from_dict(result)
+    final = pd.DataFrame.from_dict(result)
     return final
 
 
@@ -459,7 +510,8 @@ def rsiDivergenceBuy(candles, rsi_array, precisionNo=100):
     selectedDate = dates[0]
     for i in range(1, len(secondPrices)):
 
-        if secondPrices[i] + precision(secondPrices[i], precisionNo) < secondPrices[i - 1] and secondRsis[i] > secondRsis[i - 1] + precision(secondRsis[i - 1], precisionNo):
+        if secondPrices[i] + precision(secondPrices[i], precisionNo) < secondPrices[i - 1] and secondRsis[i] > secondRsis[
+            i - 1] + precision(secondRsis[i - 1], precisionNo):
             min_price = secondPrices[i]
             min_rsi = secondRsis[i]
             selectedDate = secondDates[i]
@@ -509,7 +561,9 @@ def rsiDivergenceSell(candles, rsi_array, precisionNo=100):
     maxPriceRes = 0
     maxRsiRes = math.inf
     for i in range(1, len(secondPrices)):
-        if secondPrices[i] > secondPrices[i - 1] + precision(secondPrices[i], precisionNo) and secondRsis[i] + precision(secondRsis[i], precisionNo) < secondRsis[i - 1]:
+        if secondPrices[i] > secondPrices[i - 1] + precision(secondPrices[i], precisionNo) and secondRsis[i] + precision(secondRsis[i],
+                                                                                                                         precisionNo) < \
+                secondRsis[i - 1]:
             maxPriceRes = secondPrices[i]
             maxRsiRes = secondRsis[i]
             selectedDate = secondDates[i]
@@ -530,13 +584,13 @@ def simplifyDate(date=datetime):
 
 c7Crossed25 = 0
 
-def setC7Crossed25(input=False):
-    global c7Crossed25    # Needed to modify global copy of globvar
-    c7Crossed25 = input
+
+def setC7Crossed25(val=False):
+    global c7Crossed25  # Needed to modify global copy of globvar
+    c7Crossed25 = val
 
 
 def LaliIndicator(candlesIn4HourFromat=DataFrame()):
-
     ma7 = candlesIn4HourFromat.close.ewm(span=7, adjust=False).mean()
     ma25 = candlesIn4HourFromat.close.ewm(span=25, adjust=False).mean()
     ma99 = candlesIn4HourFromat.close.ewm(span=99, adjust=False).mean()
@@ -580,10 +634,62 @@ def LaliIndicator(candlesIn4HourFromat=DataFrame()):
             ma99Slope = slope(ma99x1, ma99x2, ma99y1, ma99y2)
             if ma25Slope > ma99Slope and ma25y2 > ma99y2:
                 return True
-    
+
     return False
 
 
+def convert60MinChartTo5MinChart(candles60Min):
+    result = list()
+    for i in range(len(candles60Min['date'])):
+        for j in range(12):
+            strFull = str(candles60Min['date'][i]).split(' ')
+            strDate = strFull[0].split('-')
+            strTime = strFull[1].split(':')
+            dateInMin5 = datetime(int(strDate[0]), int(strDate[1]), int(strDate[2]), int(strTime[0]), int(strTime[1]), int(strTime[2]))
+            dateInMin5 = dateInMin5 + timedelta(minutes=j * 5)
+            result.append({'date': dateInMin5, 'open': candles60Min['open'][i], 'high': candles60Min['high'][i],
+                           'low': candles60Min['low'][i], 'close': candles60Min['close'][i], 'volume': candles60Min['volume'][i]})
+
+    return pd.DataFrame.from_dict(result)
+
+
+def Stalker(asset: str):
+    # input: str
+    # output: list {date: datetime, status: bool or None}
+
+    ittration = 0
+    candles60 = getCandles60Mins(asset, 1)
+    candlesLen = len(candles60)
+
+    def calculate(ittration: int):
+        if ittration == 0:
+            return 0
+        ittration = candlesLen - ittration
+        lastLen = len(candles60['close']) - ittration
+        last = candles60['close'][lastLen - 1]
+        actual = candles60['close'][lastLen]
+        result = actual - last
+        return result / last
+
+    ans = [False]
+    result = []
+    for i in range(candlesLen):
+        phi = 0.001
+        diff = calculate(ittration)
+        ans.append(diff > phi)
+        ansLen = len(ans)
+        if ans[ansLen - 1] == True and ans[ansLen - 2] == False:
+            # print('time:', candles60['date'][i], 'buy')
+            result.append({'date': candles60['date'][i], 'status': True})
+        elif ans[ansLen - 1] == False and ans[ansLen - 2] == True:
+            # print('time:', candles60['date'][i], 'Sell')
+            result.append({'date': candles60['date'][i], 'status': False})
+        else:
+            # print('time:', candles60['date'][i], 'Do nothing')
+            result.append({'date': candles60['date'][i], 'status': None})
+
+        ittration += 1
+    return result
 # candles = getCandles4Hour('btc', 400)
 # print(len(candles['date']))
 # for i in range(200, 2400):
@@ -593,7 +699,6 @@ def LaliIndicator(candlesIn4HourFromat=DataFrame()):
 #     buy = LaliIndicator(can)
 #     if buy:
 #         print("BUY")
-
 
 
 # candles = getCandles('zil', 10)
@@ -615,3 +720,6 @@ def LaliIndicator(candlesIn4HourFromat=DataFrame()):
 
 # for i in fibResult:
 #     print(isInFisinity(i, candels['close'][len(candels['close']) - 1]))
+
+
+# Stalker('sol')
